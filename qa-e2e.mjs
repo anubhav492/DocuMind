@@ -3,7 +3,7 @@ import { spawn } from 'node:child_process';
 import { createHash, randomUUID } from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 import assert from 'node:assert/strict';
-import pool from './db.js';
+import pool from './server/db.js';
 
 const root = fileURLToPath(new URL('.', import.meta.url));
 const runId = randomUUID();
@@ -120,7 +120,7 @@ try {
   before = await snapshot();
   assert.equal((await pool.query('SELECT id FROM documents WHERE file_hash = $1', [hash])).rowCount, 0);
   if (!externalBase) {
-    await start(['server.js'], { PORT: '5197' }, 'Server running', 'Express');
+    await start(['server/server.js'], { PORT: '5197' }, 'Server running', 'Express');
     if (proxyMode) {
       await start([
         'client/node_modules/vite/bin/vite.js', 'client', '--config', 'client/vite.config.js',

@@ -212,7 +212,8 @@ export async function ingestDocument(filePath, originalFilename) {
 
 async function main() {
   try {
-    await ingestDocument("./data/lec3.pdf");
+    const samplePdf = fileURLToPath(new URL("../data/lec3.pdf", import.meta.url));
+    await ingestDocument(samplePdf);
   } catch (error) {
     process.exitCode = 1;
     console.error("Ingestion failed:", error.message);

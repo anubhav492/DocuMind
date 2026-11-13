@@ -4,7 +4,7 @@ import { fileURLToPath } from "node:url";
 import pg from "pg";
 
 // Resolve configuration relative to this module, regardless of the launch directory.
-config({ path: fileURLToPath(new URL("./.env", import.meta.url)), quiet: true });
+config({ path: fileURLToPath(new URL("../.env", import.meta.url)), quiet: true });
 
 export function logError(context, error) {
   const secrets = Object.entries(process.env)

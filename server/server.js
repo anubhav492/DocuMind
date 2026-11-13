@@ -3,8 +3,9 @@ import express from "express";
 import multer from "multer";
 import { randomUUID } from "node:crypto";
 import { rm } from "node:fs/promises";
-import { extname } from "node:path";
+import { dirname, extname, resolve } from "node:path";
 import { tmpdir } from "node:os";
+import { fileURLToPath } from "node:url";
 import { generateAnswer } from "./answer.js";
 import { ingestDocument } from "./ingest.js";
 import pool, { logError } from "./db.js";
@@ -22,6 +23,9 @@ const UUID_PATTERN =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 app.use(express.json({ limit: "16kb" }));
+
+const serverDirectory = dirname(fileURLToPath(import.meta.url));
+const clientDistDirectory = resolve(serverDirectory, "../client/dist");
 
 const upload = multer({
   storage: multer.diskStorage({
@@ -158,6 +162,19 @@ app.delete("/api/documents/:id", async (req, res, next) => {
   } catch (error) {
     return next(error);
   }
+});
+
+// Keep unknown API requests JSON-shaped, while serving the React app for browser routes.
+app.use("/api", (_req, res) => {
+  res.status(404).json({ error: "API endpoint not found" });
+});
+
+app.use(express.static(clientDistDirectory));
+app.get("/{*splat}", (req, res, next) => {
+  if (req.path.startsWith("/api")) return next();
+  return res.sendFile(resolve(clientDistDirectory, "index.html"), error => {
+    if (error) return next(error);
+  });
 });
 
 app.use((error, req, res, _next) => {

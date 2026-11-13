@@ -1,64 +1,67 @@
 # DocuMind
 
-DocuMind is a full-stack PDF question-answering application. It ingests PDFs, creates Gemini embeddings for searchable chunks, stores them in PostgreSQL with pgvector, and generates grounded answers with source citations.
+DocuMind is a full-stack PDF RAG application with a React/Vite client and an Express backend. PDFs are cleaned, recursively chunked, embedded with Gemini, stored in Supabase PostgreSQL/pgvector, retrieved by cosine similarity, and answered with grounded Gemini citations.
 
-## Features
+## Structure
 
-- PDF upload with SHA-256 duplicate detection
-- Recursive text chunking and 768-dimensional Gemini embeddings
-- Semantic retrieval with document and page filters
-- Grounded Gemini answers with source citations
-- Document listing and deletion
-- React/Vite dashboard for upload, search, and chat
-
-## Architecture
-
-`PDF → text cleaning → recursive chunking → Gemini embeddings → PostgreSQL/pgvector → cosine retrieval → Gemini answer`
-
-## Stack
-
-Node.js, Express, React, Vite, `@google/genai`, LangChain text/PDF utilities, PostgreSQL, Supabase, pgvector, and `pg`.
+- `client/` — React/Vite frontend
+- `server/` — Express API, ingestion, retrieval, answer generation, and database pool
+- `qa-e2e.mjs` — live API/database integration test
 
 ## Configuration
 
-Copy `.env.example` to `.env` and set the real values locally:
+Copy `.env.example` to `.env` at the repository root and set `GEMINI_API_KEY`, `DATABASE_URL`, and `PORT` (local default: `5000`). Keep `.env` private; the frontend receives no secrets.
+
+## Local development
+
+From the repository root:
 
 ```bash
-cp .env.example .env
-```
-
-Required variables:
-
-- `GEMINI_API_KEY` — Gemini API key
-- `DATABASE_URL` — PostgreSQL/Supabase connection string
-- `PORT` — backend port (defaults to `3000`)
-
-Never commit `.env` or credentials.
-
-## Run locally
-
-Install backend dependencies and start Express from the project root:
-
-```bash
-npm install
-npm start
-```
-
-Install and start the frontend in another terminal:
-
-```bash
-cd client
-npm install
+npm run install:all
 npm run dev
 ```
 
-The Vite proxy forwards relative `/api` requests to the backend port from the root `.env`. Set `API_PROXY_TARGET` only when the backend runs at a non-default host or port. Build the frontend with `npm run build` from `client/`.
+Run the Vite client in a second terminal:
+
+```bash
+cd client
+npm run dev
+```
+
+Vite runs on port `5173` and proxies `/api` to the backend `PORT`. For a production-style local run:
+
+```bash
+npm run build
+npm start
+```
+
+Express serves `client/dist` and keeps all API routes under `/api`.
 
 ## API
 
-- `POST /api/documents/upload` — multipart upload with field `file`; accepts PDFs up to 10 MB. Returns the document ID and stored chunk count. Duplicate files are skipped safely.
-- `GET /api/documents` — returns `{ "documents": [{ "id", "filename", "created_at" }] }`.
-- `POST /api/rag/ask` — JSON body `{ "question", "documentId?", "topK?", "minSimilarity?", "pageNumber?" }`; returns a grounded `answer` and `sources`.
-- `DELETE /api/documents/:id` — deletes a document; associated chunks are removed by the existing foreign-key cascade.
+- `POST /api/documents/upload` — multipart/form-data field `file`; PDF uploads up to 10 MB with SHA-256 duplicate detection.
+- `GET /api/documents` — lists document IDs, filenames, and creation dates.
+- `POST /api/rag/ask` — JSON `{ question, documentId?, topK?, minSimilarity?, pageNumber? }`; returns a grounded answer and source metadata.
+- `DELETE /api/documents/:id` — deletes a document and its cascaded chunks.
 
-The PostgreSQL tables and pgvector extension are managed outside this repository. Use the existing project schema before starting ingestion.
+Run the live integration test when Gemini and PostgreSQL are available:
+
+```bash
+npm run test:e2e
+```
+
+## Render
+
+Build command:
+
+```bash
+npm ci --prefix server && npm ci --prefix client && npm run build --prefix client
+```
+
+Start command:
+
+```bash
+node server/server.js
+```
+
+Configure `GEMINI_API_KEY`, `DATABASE_URL`, and `PORT` as Render environment variables. The existing PostgreSQL schema and pgvector extension must already be provisioned.
