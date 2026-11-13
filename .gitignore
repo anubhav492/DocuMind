@@ -1,0 +1,20 @@
+node_modules/
+**/node_modules/
+
+dist/
+**/dist/
+
+.env
+.env.*
+!.env.example
+
+*.log
+logs/
+tmp/
+temp/
+uploads/
+**/uploads/
+
+# Local fixtures and generated PDFs
+*.pdf
+qa-*.pdf
