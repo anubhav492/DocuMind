@@ -213,6 +213,7 @@ app.use((error, req, res, _next) => {
 });
 
 export { app };
+export default app;
 
 const isDirectExecution =
   process.argv[1] && fileURLToPath(import.meta.url) === resolve(process.argv[1]);
