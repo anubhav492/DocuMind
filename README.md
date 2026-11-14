@@ -65,3 +65,12 @@ node server/server.js
 ```
 
 Configure `GEMINI_API_KEY`, `DATABASE_URL`, and `PORT` as Render environment variables. The existing PostgreSQL schema and pgvector extension must already be provisioned.
+
+## Vercel services
+
+`vercel.json` defines two services in this repository:
+
+- `app` — the internal Express service rooted at `server/`; only `/api/*` is public.
+- `client` — the public Vite frontend rooted at `client/`; all non-API paths are routed here.
+
+The browser uses relative `/api` URLs, so no service binding is required: the frontend does not call a private hostname, and Vercel routes those requests through the public rewrite to `app`. Set `GEMINI_API_KEY`, `DATABASE_URL`, and `PORT` on the `app` service only. Client builds do not receive backend secrets.
