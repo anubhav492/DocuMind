@@ -9,8 +9,8 @@ async function request(path, options = {}) {
   const data = await response.json().catch(() => null);
   if (!response.ok) {
     if (typeof data?.error === 'string' && data.error) throw new Error(data.error);
-    if (!data && [500, 502, 503, 504].includes(response.status)) {
-      throw new Error('The API server could not be reached through the development proxy. Check that the backend is running and the proxy targets its port.');
+    if (!data && response.status >= 500) {
+      throw new Error(`The backend returned an error (${response.status}). Please try again shortly.`);
     }
     if (!data && response.status === 404) {
       throw new Error('The API route was not found. Check that the development proxy points to this application’s Express server.');

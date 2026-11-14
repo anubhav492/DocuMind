@@ -212,15 +212,22 @@ app.use((error, req, res, _next) => {
   return res.status(500).json({ error: "Internal server error" });
 });
 
-const server = app.listen(PORT);
-server.on("listening", () => {
-  console.log(`Server running on http://localhost:${PORT}`);
-});
-server.on("error", async error => {
-  logError("Server startup failed:", error);
-  if (error.code === "EADDRINUSE") {
-    console.error(`Port ${PORT} is already in use. Stop the old backend or set PORT to a free port and restart Vite with the same PORT.`);
-  }
-  process.exitCode = 1;
-  await pool.end();
-});
+export { app };
+
+const isDirectExecution =
+  process.argv[1] && fileURLToPath(import.meta.url) === resolve(process.argv[1]);
+
+if (isDirectExecution) {
+  const server = app.listen(PORT);
+  server.on("listening", () => {
+    console.log(`Server running on http://localhost:${PORT}`);
+  });
+  server.on("error", async error => {
+    logError("Server startup failed:", error);
+    if (error.code === "EADDRINUSE") {
+      console.error(`Port ${PORT} is already in use. Stop the old backend or set PORT to a free port and restart Vite with the same PORT.`);
+    }
+    process.exitCode = 1;
+    await pool.end();
+  });
+}
